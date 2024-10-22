@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "innovation_backend": {
+      "candid": "src/innovation_backend/innovation_backend.did",
+      "package": "innovation_backend",
+      "type": "rust"
+    },
+    "innovation_frontend": {
+      "dependencies": [
+        "innovation_backend"
+      ],
+      "source": [
+        "src/innovation_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "innovation_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
