@@ -1,4 +1,7 @@
-#[ic_cdk::query]
-fn greet(name: String) -> String {
-    format!("Hello, {}!", name)
+use ic_principal::Principal;
+
+#[ic_cdk::update]
+fn whoami() -> Principal {
+    ic_cdk::caller()
 }
+

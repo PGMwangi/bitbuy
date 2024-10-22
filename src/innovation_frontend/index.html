@@ -1,17 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width" />
-  <title>IC Hello Starter</title>
-  <base href="/" />
-  <link rel="icon" href="/favicon.ico" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline';">
+    <title>Your App Title</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Ensure this file exists -->
+    <script src="https://unpkg.com/@dfinity/agent@latest/dist/index.js"></script>
+    <script src="https://unpkg.com/@dfinity/auth-client@latest/dist/index.js"></script>
 </head>
-
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
+    <div id="app">
+        <h1>Welcome to My App</h1>
+        <button id="login-button">Login with Internet Identity</button>
+        <div id="user-info" style="display:none;">
+            <h2>User Info:</h2>
+            <pre id="user-details"></pre>
+        </div>
+    </div>
+    
+    <script src="app.js"></script> <!-- Ensure this file exists -->
+    <script>
+        // Ensure that the Internet Identity login works
+        let authClient;
 
+        async function init() {
+            // Create an AuthClient instance
+            authClient = await AuthClient.create();
+
+            // Set up the login button
+            document.getElementById('login-button').onclick = async () => {
+                try {
+                    await authClient.login({
+                        identityProvider:"https://identity.ic0.app",
+                        onSuccess: (identity) => {
+                            // This function runs after successful login
+                            const userInfo = identity.getPrincipal().toString();
+                            document.getElementById('user-info').style.display = 'block';
+                            document.getElementById('user-details').innerText = JSON.stringify(userInfo, null, 2);
+                        },
+                        onError: (err) => {
+                            console.error('Login failed:', err);
+                        },
+                    });
+                } catch (error) {
+                    console.error('Error during login:', error);
+                }
+            };
+        }
+
+        init();
+    </script>
+</body>
 </html>

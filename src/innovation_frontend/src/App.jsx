@@ -1,31 +1,55 @@
-import { useState } from 'react';
-import { innovation_backend } from 'declarations/innovation_backend';
+import React, { useState } from 'react';
+import { Actor, HttpAgent } from '@dfinity/agent';
+import { AuthClient } from '@dfinity/auth-client';
+
+const webapp_id = process.env.WHOAMI_CANISTER_ID;
+
+const webapp_idl = ({ IDL }) => {
+    return IDL.Service({ whoami: IDL.Func([], [IDL.Principal], ['query']) });
+};
 
 function App() {
-  const [greeting, setGreeting] = useState('');
+    const [principal, setPrincipal] = useState('');
+    const [iiUrl, setIiUrl] = useState('');
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    const name = event.target.elements.name.value;
-    innovation_backend.greet(name).then((greeting) => {
-      setGreeting(greeting);
-    });
-    return false;
-  }
+    React.useEffect(() => {
+        const url = process.env.DFX_NETWORK === 'local'
+            ? `http://localhost:4943/?canisterId=${process.env.II_CANISTER_ID}`
+            : `https://${process.env.II_CANISTER_ID}.ic0.app`;
 
-  return (
-    <main>
-      <img src="/logo2.svg" alt="DFINITY logo" />
-      <br />
-      <br />
-      <form action="#" onSubmit={handleSubmit}>
-        <label htmlFor="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" />
-        <button type="submit">Click Me!</button>
-      </form>
-      <section id="greeting">{greeting}</section>
-    </main>
-  );
+        setIiUrl(url);
+    }, []);
+
+    const handleLogin = async () => {
+        const authClient = await AuthClient.create();
+
+        await new Promise((resolve, reject) => {
+            authClient.login({
+                identityProvider: iiUrl,
+                onSuccess: resolve,
+                onError: reject,
+            });
+        });
+
+        const identity = authClient.getIdentity();
+        const agent = new HttpAgent({ identity });
+        const webapp = Actor.createActor(webapp_idl, {
+            agent,
+            canisterId: webapp_id,
+        });
+
+        const userPrincipal = await webapp.whoami();
+        setPrincipal(userPrincipal.toText());
+    };
+
+    return (
+        <div>
+            <h1>Who Am I?</h1>
+            <input id="iiUrl" type="text" value={iiUrl} readOnly />
+            <button onClick={handleLogin}>Login with Internet Identity</button>
+            <p>Your Principal: {principal}</p>
+        </div>
+    );
 }
 
 export default App;
